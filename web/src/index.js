@@ -13,20 +13,20 @@ const loadModule = (parent, module) => {
     
     // Module heading
     const h2 = document.createElement("h2")
-    h2.innerText = module.code
+    h2.innerText = module.module_code
     parent.appendChild(h2)
 
     // Histogram
-    embedChart(parent, "hist", module.hist)
+    embedChart(parent, "grade_histogram", module.grade_histogram)
 
     // Grade boundary stats
     const ul = document.createElement("ul")
     const stats = {
-        "median": module.stats.median,
-        ">=70": module.stats.gte70,
-        ">=60": module.stats.gte60,
-        "<=40": module.stats.lte40,
-        "Zero": module.stats.zeros
+        "median": module.grade_statistics.median,
+        ">=70": module.grade_statistics.gte70,
+        ">=60": module.grade_statistics.gte60,
+        "<=40": module.grade_statistics.lte40,
+        "Zero": module.grade_statistics.zeros
     }
     for (const [key, val] of Object.entries(stats)) {
         const li = document.createElement("li")
@@ -36,9 +36,13 @@ const loadModule = (parent, module) => {
     parent.appendChild(ul)
 
     // Module performance comparison
-    embedChart(parent, "compare", module.compare)
-}
+    embedChart(parent, "grade_comparison_plot", module.grade_comparison_plot)
 
+    // Student feedback
+    for (let i in module.student_feedback.histograms) {
+        embedChart(parent, `student_feedback_histogram_${i+1}`, module.student_feedback.histograms[i])
+    }
+}
 
 
 // Module selector
