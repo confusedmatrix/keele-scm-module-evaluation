@@ -168,7 +168,7 @@ def build_grade_comparison_plot(height, width, data):
         ]
     }, data)
 
-def get_student_feedback(module, questions, answers):
+def get_student_multi_choice_feedback(module, questions, answers):
     fb = pd.read_csv("{0}/raw/modules/{1}/feedback.csv".format(DATA_DIR, module))
     fb_answers = pd.DataFrame(fb[questions])
     fb_answers = pd.DataFrame(fb_answers.apply(pd.value_counts))
@@ -178,10 +178,20 @@ def get_student_feedback(module, questions, answers):
     
     return answers
 
+def get_textual_student_feedback(module):
+    fb = pd.read_csv("{0}/raw/modules/{1}/feedback.csv".format(DATA_DIR, module))
+    fb = fb.filter(regex=r"additional comments", axis=1)
+    
+    text_fb = []
+    for col in fb:
+        text_fb.append(fb[col].dropna().tolist())
+    
+    return text_fb
+
 def build_student_feedback_histogram(height, width, data, question):
     return VegaLite({
         "$schema": "https://vega.github.io/schema/vega-lite/v2.0.json",
-        "title": questions[question-1],
+        "title": re.sub(r"\d.\s", "", questions[question-1]),
         "height": height,
         "width": width,
         "mark": "bar",
@@ -254,13 +264,16 @@ for module in modules:
         print("No grade data found for {0}".format(module))
     
     try:
-        sfb = get_student_feedback(module, questions, answers)
+        smcfb = get_student_multi_choice_feedback(module, questions, answers)
         
         output["student_feedback"] = {}
-        output["student_feedback"]['histograms'] = []
+        output["student_feedback"]["histograms"] = []
         for i in range(1, len(questions)+1):
-            chart = build_student_feedback_histogram(height, width, sfb, i)
-            output["student_feedback"]['histograms'].append(chart.spec)
+            chart = build_student_feedback_histogram(height, width, smcfb, i)
+            output["student_feedback"]["histograms"].append(chart.spec)
+
+        output['student_feedback']["text"] = get_textual_student_feedback(module)
+        
     except(FileNotFoundError):
         print("No student feedback data found for {0}".format(module))
 

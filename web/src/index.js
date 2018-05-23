@@ -8,6 +8,15 @@ const embedChart = (parent, id, json) => {
     vegaEmbed(`#${id}`, json, { actions: false })
 }
 
+const escapeHtml = unsafe => {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+
 const loadModule = (parent, module) => {
     parent.innerHTML = ""
     
@@ -51,7 +60,22 @@ const loadModule = (parent, module) => {
         sfbH3.innerText = "Student feedback"
         parent.appendChild(sfbH3)
         for (let i in module.student_feedback.histograms) {
-            embedChart(parent, `student_feedback_histogram_${i+1}`, module.student_feedback.histograms[i])
+            const qDiv = document.createElement("div")
+            qDiv.setAttribute("data-qnumber", parseInt(i)+1)
+            qDiv.classList.add("question")
+            parent.appendChild(qDiv)
+
+            embedChart(qDiv, `student_feedback_histogram_${i+1}`, module.student_feedback.histograms[i])
+            if (module.student_feedback.text[i].length > 0) {
+                const qH4 = document.createElement("h4")
+                qH4.innerText = "Responses"
+                qDiv.appendChild(qH4)
+                for (let j in module.student_feedback.text[i]) {
+                    const bq = document.createElement("blockquote")
+                    bq.innerText = module.student_feedback.text[i][j]
+                    qDiv.appendChild(bq)
+                }
+            }
         }
     }
 }
