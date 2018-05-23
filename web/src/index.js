@@ -5,7 +5,7 @@ const embedChart = (parent, id, json) => {
     const div = document.createElement('div')
     div.id = id
     parent.appendChild(div)
-    vegaEmbed(`#${id}`, json, { actions: false })
+    vegaEmbed(`#${id}`, json, { actions: false, renderer: "svg" })
 }
 
 const escapeHtml = unsafe => {
