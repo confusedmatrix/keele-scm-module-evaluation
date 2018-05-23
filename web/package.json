@@ -5,12 +5,14 @@
   "author": "Chris Briggs <c.briggs@keele.ac.uk>",
   "license": "MIT",
   "scripts": {
-    "start": "parcel src/index.html"
+    "import_data": "mkdir -p dist && cp -R ../data/generated/ dist/data/",
+    "start": "npm run import_data && parcel src/index.html"
   },
   "devDependencies": {
     "parcel-bundler": "^1.8.1"
   },
   "dependencies": {
+    "isomorphic-fetch": "^2.2.1",
     "vega": "^3.3.1",
     "vega-embed": "^3.9.0",
     "vega-lite": "^2.4.1"

@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 import os
+import re
 import json
 from hashlib import sha512
 from vega3 import VegaLite
@@ -24,15 +25,24 @@ def save_file(file_name, data):
     with open(file_name, "w") as f:
         f.write(data)
 
+def get_modules(root):
+    modules = [item for item in os.listdir(root) if os.path.isdir(os.path.join(root, item))]
+    
+    return modules
+
 def get_grades(module):
-    grades = pd.read_csv('{0}/raw/modules/{1}/grades.csv'.format(DATA_DIR, module), skiprows=[0])
+    file = '{0}/raw/modules/{1}/grades.csv'.format(DATA_DIR, module)
+    with open(file, "r") as f:
+        fline = f.readline()
+        assessment_weights = [int(weight)/100 for weight in re.findall(r"\((.*?)%\)", fline)]
+
+    grades = pd.read_csv(file, skiprows=[0])
     grades = grades[['#Ass#', 'Mark', '#Cand Key']]
     grades.columns = ['ass', 'grade', 'user']
     grades['user'] = grades['user'].str.replace(r'#|/[0-9]', '').apply(lambda u: sha512(u.encode('utf-8')).hexdigest())
     grades = grades.set_index('user')
 
     assessments = grades['ass'].unique()
-    assessment_weights = [0.8, 0.2]
     module_grades = pd.DataFrame([], index=grades.index.unique())
 
     for k, ass in enumerate(assessments):
@@ -57,19 +67,21 @@ def build_grade_histogram(height, width, data):
                 "mark": "bar",
                 "encoding": {
                     "x": {
-                        "bin": True,
+                        "bin": { "step": 10 },
                         "field": "final_grade",
                         "type": "quantitative",
-                        "axis": {
-                            "title": "Grade"
-                        }
+                        "axis": { "title": "Grade" }
                     },
                     "y": {
                         "aggregate": "count",
                         "type": "quantitative",
-                        "axis": {
-                            "title": "Number of students"
-                        }
+                        "axis": { "title": "Number of students" }
+                    },
+                    "color": {
+                        "bin": { "step": 10 },
+                        "field": "final_grade",
+                        "type": "quantitative",
+                        "legend": None
                     }
                 }
             },
@@ -127,17 +139,13 @@ def build_grade_comparison_plot(height, width, data):
                     "x": {
                         "field": "average_grade",
                         "type": "quantitative",
-                        "axis": {
-                            "title": "Average Grade"
-                        }
+                        "axis": { "title": "Average Grade" }
                     },
                     "y": {
                         "field": "final_grade", 
                         "typs": "quantitative",
-                        "axis": {
-                            "title": "Module grade"
-                        }
-                    }
+                        "axis": { "title": "Module grade" }
+                    },
                 }
             },
             {
@@ -182,18 +190,23 @@ def build_student_feedback_histogram(height, width, data, question):
                 "field": "answer",
                 "type": "nominal",
                 "sort": None,
-                "title": ""
+                "axis": { "title": "" }
             },
             "y": {
                 "field": "q{0}".format(question),
                 "type": "quantitative",
-                "title": "count"
+                "axis": { "title": "count" }
+            },
+            "color": {
+                "field": "answer",
+                "type": "nominal",
+                "legend": None,
             }
         }
     }, data)
 
 
-modules = ['MAT-10044']
+modules = get_modules("{0}/raw/modules/".format(DATA_DIR))
 height = 400
 width = 800
 questions = [
@@ -216,29 +229,41 @@ answers = [
 # Generate output directory
 mkdir("{0}/generated/".format(DATA_DIR))
 
+# Get grades & average grades for all modules
+all_grades = [get_grades(module)["final_grade"] for module in modules]
+average_grades = pd.DataFrame(pd.concat(all_grades, axis=1).mean(axis=1), columns=["average_grade"])
+
+full_output = {}
 for module in modules:
     
     output = {}
     output["module_code"] = module
     
-    module_grades = get_grades(module)
-    chart = build_grade_histogram(height, width, module_grades)
-    output["grade_histogram"] = chart.spec
-    
-    output["grade_statistics"] = get_grade_stats(module_grades)
-    
-    average_grades = pd.DataFrame((np.random.random_sample(module_grades.shape[0]) * 100).round(1), columns=['average_grade'], index=module_grades.index)
-    compare_grades = module_grades.merge(average_grades, left_index=True, right_index=True)
+    try:
+        module_grades = get_grades(module)
+        chart = build_grade_histogram(height, width, module_grades)
+        output["grade_histogram"] = chart.spec
+        
+        output["grade_statistics"] = get_grade_stats(module_grades)
+        
+        compare_grades = module_grades.merge(average_grades, left_index=True, right_index=True, how="left")
 
-    chart = build_grade_comparison_plot(height, width, compare_grades)
-    output["grade_comparison_plot"] = chart.spec
+        chart = build_grade_comparison_plot(height, width, compare_grades)
+        output["grade_comparison_plot"] = chart.spec
+    except(FileNotFoundError):
+        print("No grade data found for {0}".format(module))
     
-    sfb = get_student_feedback(module, questions, answers)
-    
-    output["student_feedback"] = {}
-    output["student_feedback"]['histograms'] = []
-    for i in range(1, len(questions)+1):
-        chart = build_student_feedback_histogram(height, width, sfb, i)
-        output["student_feedback"]['histograms'].append(chart.spec)
+    try:
+        sfb = get_student_feedback(module, questions, answers)
+        
+        output["student_feedback"] = {}
+        output["student_feedback"]['histograms'] = []
+        for i in range(1, len(questions)+1):
+            chart = build_student_feedback_histogram(height, width, sfb, i)
+            output["student_feedback"]['histograms'].append(chart.spec)
+    except(FileNotFoundError):
+        print("No student feedback data found for {0}".format(module))
 
-    save_file("{0}/generated/{1}.json".format(DATA_DIR, module), json.dumps(output))
+    full_output[module] = output
+
+save_file("{0}/generated/modules.json".format(DATA_DIR), json.dumps(full_output))

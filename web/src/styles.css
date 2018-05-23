@@ -1,0 +1,50 @@
+#module-selector {
+    position: fixed;
+    width: 100%;
+    background-color: #f8f9fa;
+    padding: 1em;
+    top: 0;
+    left: 0;
+    text-align: center;
+}
+
+#module {
+    margin: 5em 0; 
+}
+
+h2, h3 {
+    margin: 1em 1.5em 1em 3em; 
+}
+
+.vega-embed canvas {
+    margin: 1em auto;
+    display: block;
+    max-width: 100%;
+}
+
+.module-stats {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 3em 0 6em;
+}
+.module-stats li {
+    flex: 1;
+    text-align: center;
+    margin: 1em 3px;
+    border: 1px solid #777;
+    border-radius: 3px;
+}
+
+.module-stats .title {
+    display: block;
+    padding: 0.2em;
+    background-color: #777;
+    color: #FFF;
+}
+
+.module-stats .value {
+    display: block;
+    padding: 0.2em;
+    font-size: 1.3em;
+}
