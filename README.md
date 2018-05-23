@@ -31,14 +31,23 @@ data
 This command will generate all the assets required to be displayed on the webpage:
 
 ```
-make assets.generate
+make analysis.run
 ```
 
-## Generating the web page with bundled assets (TBD)
+## Generating the web page with bundled assets
+To build a distributable production directory containing the web page and assets, run:
+
+```
+make web.build
+```
 
 
-## Serve the webpage (TBD)
+## Serve the webpage
+To serve the resulting web package, run:
 
+```
+make web.serve
+```
 
 ## Miscellaneous
 
@@ -47,7 +56,7 @@ make assets.generate
 To fiddle around with the stats/assets that are produced for the module evaluation you may run the provided jupyter notebook using the command:
 
 ```
-make assets.fiddle
+make analysis.develop
 ```
 
 ### Running environment for webpage/bundle development
@@ -55,5 +64,5 @@ make assets.fiddle
 To change the code for displaying the webpage and building the resulting bundle, run the command:
 
 ```
-make web.build.dev
+make web.develop
 ```
