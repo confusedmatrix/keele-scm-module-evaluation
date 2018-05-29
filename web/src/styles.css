@@ -21,10 +21,11 @@ blockquote {
     margin: 1em 2em 1em 6em;
 }
 
-.vega-embed canvas {
+.vega-embed > svg {
     margin: 1em auto;
     display: block;
     max-width: 100%;
+    height: auto;
 }
 
 .module-stats {
@@ -79,4 +80,9 @@ blockquote {
     left: -0.5em;
     font-size: 2em;
     font-weight: bold;
+}
+
+.question img {
+    margin: 1em auto;
+    display: block;
 }

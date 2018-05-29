@@ -17,6 +17,8 @@ const escapeHtml = unsafe => {
          .replace(/'/g, "&#039;");
 }
 
+const formatQuestion = question => question.replace(/\d+\.\s+/, "")
+
 const loadModule = (parent, module) => {
     parent.innerHTML = ""
     
@@ -59,11 +61,16 @@ const loadModule = (parent, module) => {
         const sfbH3 = document.createElement("h3")
         sfbH3.innerText = "Student feedback"
         parent.appendChild(sfbH3)
-        for (let i in module.student_feedback.histograms) {
+        let i = 0
+        for (i in module.student_feedback.histograms) {
             const qDiv = document.createElement("div")
             qDiv.setAttribute("data-qnumber", parseInt(i)+1)
             qDiv.classList.add("question")
             parent.appendChild(qDiv)
+
+            const q = document.createElement("h4")
+            q.innerText = formatQuestion(module.student_feedback.questions[i])
+            qDiv.appendChild(q)
 
             embedChart(qDiv, `student_feedback_histogram_${i+1}`, module.student_feedback.histograms[i])
             if (module.student_feedback.text[i].length > 0) {
@@ -76,6 +83,21 @@ const loadModule = (parent, module) => {
                     qDiv.appendChild(bq)
                 }
             }
+        }
+
+        for (let j in module.student_feedback.descriptive) {
+            const qDiv = document.createElement("div")
+            qDiv.setAttribute("data-qnumber", parseInt(i) + parseInt(j) + 2)
+            qDiv.classList.add("question")
+            parent.appendChild(qDiv)
+
+            const q = document.createElement("h4")
+            q.innerText = formatQuestion(module.student_feedback.questions[parseInt(i) + parseInt(j) + 1])
+            qDiv.appendChild(q)
+
+            const img = document.createElement("img")
+            img.src = module.student_feedback.descriptive[j].image
+            qDiv.appendChild(img)
         }
     }
 }

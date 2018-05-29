@@ -6,7 +6,8 @@ import os
 import re
 import json
 from hashlib import sha512
-from vega3 import VegaLite
+from vega import VegaLite
+from wordcloud import WordCloud
 from IPython.display import display
 
 DATA_DIR = "data"
@@ -188,10 +189,20 @@ def get_textual_student_feedback(module):
     
     return text_fb
 
-def build_student_feedback_histogram(height, width, data, question):
+def get_descriptive_student_feedback(module, questions):
+    fb = pd.read_csv("{0}/raw/modules/{1}/feedback.csv".format(DATA_DIR, module))
+    fb = fb.filter(questions, axis=1)
+    
+    desc_fb = []
+    for col in fb:
+        desc_fb.append(fb[col].dropna().str.cat(sep=" "))
+    
+    return desc_fb
+
+def build_student_feedback_histogram(height, width, data, questions, question):
     return VegaLite({
         "$schema": "https://vega.github.io/schema/vega-lite/v2.0.json",
-        "title": re.sub(r"\d.\s", "", questions[question-1]),
+        # "title": """",
         "height": height,
         "width": width,
         "mark": "bar",
@@ -215,11 +226,14 @@ def build_student_feedback_histogram(height, width, data, question):
         }
     }, data)
 
+def build_word_cloud(text):
+    return WordCloud(background_color="black", colormap="GnBu", height=height, width=width, font_path="analysis/fonts/caveat.ttf").generate(text)
+
 
 modules = get_modules("{0}/raw/modules/".format(DATA_DIR))
 height = 400
 width = 800
-questions = [
+mc_questions = [
     "1. Staff are good at explaining things",
     "2. The module was well organised.",
     "3. On this module, I have received sufficient advice and support with my studies.",
@@ -228,23 +242,32 @@ questions = [
     "6. Useful support materials were made available on the KLE",
     "7. Overall, I am satisfied with the quality of this module. ",
 ]
-answers = [
+mc_answers = [
     "Strongly Agree",
     "Agree",
     "Disagree",
     "Strongly Disagree",
     "N/A"
 ]
+desc_questions = [
+    "8. Was there anything in particular which you enjoyed in this module? ",
+    "9. If you could improve one thing about this module, what would it be?"
+]
 
-# Generate output directory
+# Generate output directories
 mkdir("{0}/generated/".format(DATA_DIR))
+mkdir("{0}/generated/images".format(DATA_DIR))
 
 # Get grades & average grades for all modules
 all_grades = [get_grades(module)["final_grade"] for module in modules]
 average_grades = pd.DataFrame(pd.concat(all_grades, axis=1).mean(axis=1), columns=["average_grade"])
 
+
+print("Running analysis...")
 full_output = {}
 for module in modules:
+
+    mkdir("{0}/generated/images/{1}".format(DATA_DIR, module))
     
     output = {}
     output["module_code"] = module
@@ -264,15 +287,28 @@ for module in modules:
         print("No grade data found for {0}".format(module))
     
     try:
-        smcfb = get_student_multi_choice_feedback(module, questions, answers)
+        smcfb = get_student_multi_choice_feedback(module, mc_questions, mc_answers)
         
         output["student_feedback"] = {}
+        output["student_feedback"]["questions"] = []
         output["student_feedback"]["histograms"] = []
-        for i in range(1, len(questions)+1):
-            chart = build_student_feedback_histogram(height, width, smcfb, i)
+        for i in range(1, len(mc_questions)+1):
+            chart = build_student_feedback_histogram(height, width, smcfb, mc_questions, i)
+            output["student_feedback"]["questions"].append(mc_questions[i-1])
             output["student_feedback"]["histograms"].append(chart.spec)
 
         output['student_feedback']["text"] = get_textual_student_feedback(module)
+
+        output['student_feedback']['descriptive'] = []
+        dfb = get_descriptive_student_feedback(module, desc_questions)
+        for i in range(len(desc_questions)):
+            wordcloud = build_word_cloud(dfb[i])
+            wordcloud.to_file("{0}/generated/images/{1}/{2}.png".format(DATA_DIR, module, desc_questions[i][0]))
+
+            output["student_feedback"]["questions"].append(desc_questions[i])
+            output['student_feedback']['descriptive'].append({
+                "image": "{0}/images/{1}/{2}.png".format(DATA_DIR, module, desc_questions[i][0])
+            })
         
     except(FileNotFoundError):
         print("No student feedback data found for {0}".format(module))
