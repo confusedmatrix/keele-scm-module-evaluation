@@ -1,7 +1,7 @@
 {
   "name": "keele-scm-module-evaluation",
   "version": "0.0.1",
-  "main": "src/index.js",
+  "main": "src/app.js",
   "author": "Chris Briggs <c.briggs@keele.ac.uk>",
   "license": "MIT",
   "scripts": {
@@ -11,10 +11,14 @@
     "serve": "pm2 serve dist/ 80 --no-daemon"
   },
   "devDependencies": {
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-preset-env": "^1.7.0",
     "parcel-bundler": "^1.8.1",
     "pm2": "^2.10.4"
   },
   "dependencies": {
+    "babel-polyfill": "^6.26.0",
+    "hyperapp": "^1.2.5",
     "isomorphic-fetch": "^2.2.1",
     "vega": "^3.3.1",
     "vega-embed": "^3.9.0",

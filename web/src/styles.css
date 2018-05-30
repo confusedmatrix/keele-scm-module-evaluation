@@ -1,3 +1,7 @@
+.loading {
+    height: 100vh;
+}
+
 #module-selector {
     position: fixed;
     width: 100%;
