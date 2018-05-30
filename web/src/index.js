@@ -1,4 +1,4 @@
-import vegaEmbed, { vega } from 'vega-embed'
+import vegaEmbed from 'vega-embed'
 import fetch from 'isomorphic-fetch'
 
 const embedChart = (parent, id, json) => {

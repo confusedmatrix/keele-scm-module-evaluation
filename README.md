@@ -1,9 +1,9 @@
-## Keele university SCM module evaluation application
-The application builds assets for a simple module evaluation (e.g. attainment histograms, student feedback histograms etc) and presents them as a HTML webpage.
+# Keele university SCM module evaluation application
+This application builds assets for a simple module evaluation (e.g. attainment histograms, student feedback histograms etc) and presents them as a HTML webpage.
 
 
 ## Dependencies
-This application runs in docker environment, therefore you only need a recent version of docker to run it.
+This application runs in a docker environment, therefore you only need a recent version of docker to run it.
 
 Download and install docker if you haven't already: https://store.docker.com/search?type=edition&offering=community
 
@@ -34,6 +34,8 @@ This command will generate all the assets required to be displayed on the webpag
 make analysis.run
 ```
 
+Once complete, the JSON and images will be located in `data/generated`
+
 ## Generating the web page with bundled assets
 To build a distributable production directory containing the web page and assets, run:
 
@@ -41,6 +43,7 @@ To build a distributable production directory containing the web page and assets
 make web.build
 ```
 
+Once complete, the html, javscript, css and assets will be located in `web/dist`
 
 ## Serve the webpage
 To serve the resulting web package, run:
@@ -48,6 +51,8 @@ To serve the resulting web package, run:
 ```
 make web.serve
 ```
+
+Now go to `localhost` in your browser to see the resulting web page.
 
 ## Miscellaneous
 
@@ -59,10 +64,16 @@ To fiddle around with the stats/assets that are produced for the module evaluati
 make analysis.develop
 ```
 
-### Running environment for webpage/bundle development
+Follow the link provided on the command line to open jupyter lab in your browser.
+
+Any changes you make here that you want to keep will need to modified in `analysis/main.py` also
+
+### Running the environment for webpage/bundle development
 
 To change the code for displaying the webpage and building the resulting bundle, run the command:
 
 ```
 make web.develop
 ```
+
+The development server will run at `localhost:1234`

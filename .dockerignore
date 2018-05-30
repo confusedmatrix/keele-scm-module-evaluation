@@ -4,6 +4,7 @@
 .ipython
 .jupyter
 .local
+.git
 *.log
 dist
 data

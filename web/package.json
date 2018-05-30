@@ -6,10 +6,13 @@
   "license": "MIT",
   "scripts": {
     "import_data": "mkdir -p dist && cp -R ../data/generated/ dist/data/",
-    "start": "npm run import_data && parcel src/index.html"
+    "build": "yarn import_data && parcel build src/index.html",
+    "develop": "yarn import_data && parcel --hmr-port 8080 src/index.html",
+    "serve": "pm2 serve dist/ 80 --no-daemon"
   },
   "devDependencies": {
-    "parcel-bundler": "^1.8.1"
+    "parcel-bundler": "^1.8.1",
+    "pm2": "^2.10.4"
   },
   "dependencies": {
     "isomorphic-fetch": "^2.2.1",
