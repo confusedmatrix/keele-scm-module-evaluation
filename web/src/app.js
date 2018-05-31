@@ -76,7 +76,8 @@ const ModuleSelector = ({ modules, changeModule }) => (
 
 const Module = ({ module }) => (
     <div key={module.module_code} id="module">
-        <h2>{module.module_code}</h2>
+        <h2>{module.module_code} ({module.year}, semester {module.semester})<br /><span class="h6 label">{module.num_students} students</span></h2>
+        
         <div oncreate={el => embedChart(el, "grade_histogram", module.grade_histogram)}></div>
         <ul class="module-stats">
             { Object.entries(transformStats(module.grade_statistics)).map(([ key, value ]) => (
@@ -87,6 +88,9 @@ const Module = ({ module }) => (
         { module.hasOwnProperty("student_feedback") ? 
             <StudentFeedback feedback={module.student_feedback} /> : 
             <p class="toast toast-error">No student feedback data available</p> }
+        { module.hasOwnProperty("staff_feedback") ? 
+            <StaffFeeback feedback={module.staff_feedback} /> :
+            <p class="toast toast-error">No staff feedback data available</p> }
     </div>
 )
 
@@ -114,9 +118,23 @@ const StudentFeedback = ({ feedback }) => (
                 <div class="question" data-qnumber={key + 1}>
                     <h4>{formatQuestion(feedback.questions[key])}</h4>
                     <img src={feedback.descriptive[k].image} />
+                    { feedback.descriptive[k].text.length < 1 ? null : (
+                    <div>
+                        <h4>Full responses</h4>
+                        { feedback.descriptive[k].text.map(response => (
+                            <blockquote>{escapeHtml(response)}</blockquote>
+                        )) }
+                    </div>
+                ) }
                 </div>
             )
         }) }
+    </div>
+)
+
+const StaffFeeback = ({ feedback }) => (
+    <div>
+        <h3>Staff feedback</h3>
     </div>
 )
 

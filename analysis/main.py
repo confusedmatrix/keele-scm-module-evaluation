@@ -57,6 +57,12 @@ def get_grades(module):
     
     return module_grades
 
+def get_year_and_semester(module):
+    file = '{0}/raw/modules/{1}/grades.csv'.format(DATA_DIR, module)
+    grades = pd.read_csv(file, skiprows=[0])
+    
+    return (grades.iloc[0]['Year'], grades.iloc[0]['Period'])
+
 def build_grade_histogram(height, width, data):
     return VegaLite({
         "$schema": "https://vega.github.io/schema/vega-lite/v2.0.json",
@@ -195,7 +201,7 @@ def get_descriptive_student_feedback(module, questions):
     
     desc_fb = []
     for col in fb:
-        desc_fb.append(fb[col].dropna().str.cat(sep=" "))
+        desc_fb.append(fb[col].dropna())
     
     return desc_fb
 
@@ -274,6 +280,12 @@ for module in modules:
     
     try:
         module_grades = get_grades(module)
+        output["num_students"] = module_grades.shape[0]
+        
+        year, semester = get_year_and_semester(module)
+        output["year"] = year
+        output["semester"] = re.sub(r"SEM", "", semester)
+
         chart = build_grade_histogram(height, width, module_grades)
         output["grade_histogram"] = chart.spec
         
@@ -302,12 +314,13 @@ for module in modules:
         output['student_feedback']['descriptive'] = []
         dfb = get_descriptive_student_feedback(module, desc_questions)
         for i in range(len(desc_questions)):
-            wordcloud = build_word_cloud(dfb[i])
+            wordcloud = build_word_cloud(dfb[i].str.cat(sep=" "))
             wordcloud.to_file("{0}/generated/images/{1}/{2}.png".format(DATA_DIR, module, desc_questions[i][0]))
 
             output["student_feedback"]["questions"].append(desc_questions[i])
             output['student_feedback']['descriptive'].append({
-                "image": "{0}/images/{1}/{2}.png".format(DATA_DIR, module, desc_questions[i][0])
+                "image": "{0}/images/{1}/{2}.png".format(DATA_DIR, module, desc_questions[i][0]),
+                "text": dfb[i].tolist()
             })
         
     except(FileNotFoundError):
