@@ -105,7 +105,7 @@ const StudentFeedback = ({ feedback }) => (
                     <div>
                         <h4>Responses</h4>
                         { feedback.text[k].map(response => (
-                            <blockquote>{escapeHtml(response)}</blockquote>
+                            <blockquote innerHTML={escapeHtml(response)}></blockquote>
                         )) }
                     </div>
                 ) }
@@ -122,7 +122,7 @@ const StudentFeedback = ({ feedback }) => (
                     <div>
                         <h4>Full responses</h4>
                         { feedback.descriptive[k].text.map(response => (
-                            <blockquote>{escapeHtml(response)}</blockquote>
+                             <blockquote innerHTML={escapeHtml(response)}></blockquote>
                         )) }
                     </div>
                 ) }
@@ -135,6 +135,14 @@ const StudentFeedback = ({ feedback }) => (
 const StaffFeeback = ({ feedback }) => (
     <div>
         <h3>Staff feedback</h3>
+        <div class="staff-feedback">
+            { Object.entries(feedback).map(([key, value]) => (
+                <div>
+                    <h4>{key}</h4>
+                    <p innerHTML={escapeHtml(value)}></p>
+                </div>
+            )) }
+        </div>
     </div>
 )
 

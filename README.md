@@ -17,7 +17,7 @@ make install
 ```
 
 ## Generating the module evaluation assets
-For this to do anything useful, you must drop some files into `data/raw/modules` in order for the script to generate assets for them. The format for file structure should be:
+For this to do anything useful, you must drop some files into `data/raw/modules` in order for the script to generate assets for them. The format for the file structure should be:
 
 ```
 data
@@ -26,6 +26,7 @@ data
             MAT-10044
                 feedback.csv
                 grades.csv
+        staff-feedback.csv
 ```
 
 This command will generate all the assets required to be displayed on the webpage:

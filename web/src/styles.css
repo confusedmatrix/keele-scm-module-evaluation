@@ -90,3 +90,15 @@ blockquote {
     margin: 1em auto;
     display: block;
 }
+
+.staff-feedback {
+    padding: 1em 0;
+    position: relative;
+    overflow: visible;
+    margin: 2em 0;
+    border: 3px solid #f8f8f8;
+}
+
+.staff-feedback p {
+    margin: 1em 4.5em; 
+}

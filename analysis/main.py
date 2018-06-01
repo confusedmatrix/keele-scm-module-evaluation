@@ -235,6 +235,13 @@ def build_student_feedback_histogram(height, width, data, questions, question):
 def build_word_cloud(text):
     return WordCloud(background_color="black", colormap="GnBu", height=height, width=width, font_path="analysis/fonts/caveat.ttf").generate(text)
 
+def get_staff_feedback(module):
+    fb = pd.read_csv("{0}/raw/staff-feedback.csv".format(DATA_DIR))
+    mfb = fb[fb["Module Code"] == module]
+    if len(mfb) < 1:
+        return None
+    return mfb.drop(["Timestamp", "Email address", "Module Code", "Module Name"], axis=1).iloc[0].to_dict()
+
 
 modules = get_modules("{0}/raw/modules/".format(DATA_DIR))
 height = 400
@@ -325,6 +332,15 @@ for module in modules:
         
     except(FileNotFoundError):
         print("No student feedback data found for {0}".format(module))
+
+    try:
+        staff_feedback = get_staff_feedback(module)
+        if staff_feedback == None:
+            print("No staff feedback data found for {0}".format(module))
+        else:
+            output["staff_feedback"] = get_staff_feedback(module)
+    except(FileNotFoundError):
+        print("No staff feedback data found for {0}".format(module))
 
     full_output[module] = output
 
