@@ -10,7 +10,7 @@ Download and install docker if you haven't already: https://store.docker.com/sea
 You will also need `make` in order to run the simple make commands provided.
 
 ## Installation
-To intall thhe docker environment and all the required dependecies of the project, simply run:
+To intall the docker environment and all the required dependecies of the project, simply run:
 
 ```
 make install
