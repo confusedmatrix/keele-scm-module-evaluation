@@ -1,8 +1,10 @@
 import "babel-polyfill";
 
 import { h, app } from "hyperapp"
-import fetch from "isomorphic-fetch"
+// import fetch from "isomorphic-fetch"
 import vegaEmbed from 'vega-embed'
+
+import modules from '../dist/data/modules.json'
 
 const embedChart = (parent, id, json) => {
     const div = document.createElement('div')
@@ -33,18 +35,20 @@ const transformStats = stats => ({
 
 
 const state = {
-    modules: {},
-    currentModuleCode: null
+    // modules: {},
+    modules,
+    // currentModuleCode: null
+    currentModuleCode: Object.keys(modules)[0]
 }
 const actions = {
-    init: () => async (state, actions) => {
-        const resp = await fetch('data/modules.json')
-        if (resp.status >= 400) throw new Error("Bad response from server")
+    // init: () => async (state, actions) => {
+    //     const resp = await fetch('data/modules.json')
+    //     if (resp.status >= 400) throw new Error("Bad response from server")
     
-        const modules = await resp.json()
-        actions.loadModules(modules)
-    },
-    loadModules: modules => state => ({ modules, currentModuleCode: Object.keys(modules)[0] }),
+    //     const modules = await resp.json()
+    //     actions.loadModules(modules)
+    // },
+    // loadModules: modules => state => ({ modules, currentModuleCode: Object.keys(modules)[0] }),
     changeModule: module => state => ({ currentModuleCode: module })
 }
 
@@ -146,4 +150,4 @@ const StaffFeeback = ({ feedback }) => (
     </div>
 )
 
-app(state, actions, AppView, document.getElementById("root")).init()
+app(state, actions, AppView, document.getElementById("root"))//.init()
