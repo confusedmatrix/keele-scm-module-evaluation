@@ -1,5 +1,5 @@
 FROM jupyter/datascience-notebook:59904dd7776a
 
-RUN pip install vega wordcloud PyQt5
+RUN pip install vega==1.1.1 wordcloud==1.4.1 PyQt5==5.10.1
 
 RUN jupyter labextension install @jupyterlab/vega3-extension
