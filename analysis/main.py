@@ -8,7 +8,6 @@ import json
 from hashlib import sha512
 from vega import VegaLite
 from wordcloud import WordCloud
-from IPython.display import display
 
 DATA_DIR = "data"
 
