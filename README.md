@@ -7,7 +7,7 @@ This application runs in a docker environment, therefore you only need a recent 
 
 Download and install docker if you haven't already: https://store.docker.com/search?type=edition&offering=community
 
-Make sure you are signed into docker hub using a Docker ID (you may need to set this up if you haven't already go one) via the docker control panel. 
+Make sure you are signed into docker hub using a Docker ID (you may need to set this up if you haven't already got one) via the docker control panel. 
 
 You will also need `make` in order to run the simple make commands provided.
 
