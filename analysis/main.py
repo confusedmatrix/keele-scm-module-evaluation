@@ -31,16 +31,19 @@ def get_modules(root):
     return modules
 
 def get_grades(module):
+    print(module)
     file = '{0}/raw/modules/{1}/grades.csv'.format(DATA_DIR, module)
     with open(file, "r") as f:
         fline = f.readline()
-        assessment_weights = [int(weight)/100 for weight in re.findall(r"\((.*?)%\)", fline)]
+        assessment_weights = [int(weight)/100 for weight in re.findall(r"\(([0-9]+?)%?\)", fline)]
+        print("assessment weights", assessment_weights)
 
     grades = pd.read_csv(file, skiprows=[0])
     grades = grades[['#Ass#', 'Mark', '#Cand Key']]
     grades.columns = ['ass', 'grade', 'user']
     grades['user'] = grades['user'].str.replace(r'#|/[0-9]', '').apply(lambda u: sha512(u.encode('utf-8')).hexdigest())
     grades = grades.set_index('user')
+    grades['grade'] = grades['grade'].apply(pd.to_numeric, errors="coerce").fillna(0)
 
     assessments = grades['ass'].unique()
     module_grades = pd.DataFrame([], index=grades.index.unique())
@@ -48,12 +51,14 @@ def get_grades(module):
     for k, ass in enumerate(assessments):
         assessment_grades = grades[grades['ass'] == ass]['grade'].to_frame()
         assessment_grades.columns = [ass]
+        # print(assessment_grades[ass])
         assessment_grades['{0}_weighted'.format(ass)] = assessment_grades[ass] * assessment_weights[k]
         module_grades = module_grades.merge(assessment_grades, left_index=True, right_index=True, how="outer")
 
     module_grades = module_grades.fillna(0)
     module_grades['final_grade'] = module_grades.filter(regex="_weighted").sum(axis=1)
     
+    print("done")
     return module_grades
 
 def get_year_and_semester(module):
@@ -76,7 +81,8 @@ def build_grade_histogram(height, width, data):
                         "bin": { "step": 10 },
                         "field": "final_grade",
                         "type": "quantitative",
-                        "axis": { "title": "Grade" }
+                        "axis": { "title": "Grade", "tickCount": 10 },
+                        "scale": { "domain": [0, 100] }
                     },
                     "y": {
                         "aggregate": "count",
@@ -145,12 +151,14 @@ def build_grade_comparison_plot(height, width, data):
                     "x": {
                         "field": "average_grade",
                         "type": "quantitative",
-                        "axis": { "title": "Average Grade" }
+                        "axis": { "title": "Average Grade" },
+                        "scale": { "domain": [0, 100] }
                     },
                     "y": {
                         "field": "final_grade", 
                         "typs": "quantitative",
-                        "axis": { "title": "Module grade" }
+                        "axis": { "title": "Module grade" },
+                        "scale": { "domain": [0, 100] }
                     },
                 }
             },
@@ -242,6 +250,9 @@ def get_staff_feedback(module):
     return mfb.drop(["Timestamp", "Email address", "Module Code", "Module Name"], axis=1).iloc[0].to_dict()
 
 
+
+# -------------------------------------------- #
+
 modules = get_modules("{0}/raw/modules/".format(DATA_DIR))
 height = 400
 width = 800
@@ -266,6 +277,11 @@ desc_questions = [
     "9. If you could improve one thing about this module, what would it be?"
 ]
 
+
+# -------------------------------------------- #
+
+print("Running analysis...")
+
 # Generate output directories
 mkdir("{0}/generated/".format(DATA_DIR))
 mkdir("{0}/generated/images".format(DATA_DIR))
@@ -274,8 +290,6 @@ mkdir("{0}/generated/images".format(DATA_DIR))
 all_grades = [get_grades(module)["final_grade"] for module in modules]
 average_grades = pd.DataFrame(pd.concat(all_grades, axis=1).mean(axis=1), columns=["average_grade"])
 
-
-print("Running analysis...")
 full_output = {}
 for module in modules:
 

@@ -32,13 +32,11 @@ const transformStats = stats => ({
     "Zero": stats.zeros
 })
 
-
-
 const state = {
     // modules: {},
     modules,
     // currentModuleCode: null
-    currentModuleCode: Object.keys(modules)[0]
+    currentModuleCode: Object.keys(modules).sort()[0]
 }
 const actions = {
     // init: () => async (state, actions) => {
@@ -71,7 +69,7 @@ const Loading = () => (
 const ModuleSelector = ({ modules, changeModule }) => (
     <div id="module-selector">
         <select onchange={e => changeModule(e.target.value)}>
-        { Object.keys(modules).map(module => (
+        { Object.keys(modules).sort().map(module => (
             <option key={module} value={module}>{module}</option>
         )) }
         </select>
