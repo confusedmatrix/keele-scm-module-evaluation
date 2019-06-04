@@ -2,7 +2,7 @@
     height: 100vh;
 }
 
-#module-selector {
+#header {
     position: fixed;
     width: 100%;
     background-color: #f8f9fa;
@@ -12,9 +12,19 @@
     text-align: center;
     z-index: 9;
 }
+#header select {
+    width: 10em;
+    margin: 0 0.5em; 
+}
+#header .print-btn {
+    margin-left: 0.5em;
+}
 
-#module {
+.module {
     margin: 5em 0; 
+}
+.module h2 {
+    margin-left: 2.6em;
 }
 
 h2, h3, h4 {
@@ -101,4 +111,40 @@ blockquote {
 
 .staff-feedback p {
     margin: 1em 4.5em; 
+}
+
+
+/* PRINT STYLING */
+#print-modules .module {
+    margin-top: 1em;
+    page-break-before: always;
+}
+
+#print-modules .module h2 {
+    text-align: center;
+}
+#print-modules .module h2::after {
+    content: " student feedback"
+}
+#print-modules .module h3 {
+    display: none;
+}
+#print-modules .module h4 {
+    margin: 0 0 0 1em;;
+}
+
+#print-modules .module .question {
+    border: none;
+    background: transparent;
+    padding: 0;
+    page-break-after: always;
+}
+
+#print-modules .module .question::after {
+    content: attr(data-qnumber) ".";
+    border-radius: 0;
+    background: transparent;
+    color: #000;
+    font-size: 1.6em;
+    left: -0.6em;
 }
