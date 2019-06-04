@@ -1,5 +1,6 @@
 .*
 *.log
+__pycache__
 python/data
 python/src/static
 web/dist

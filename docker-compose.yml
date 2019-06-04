@@ -23,7 +23,9 @@ services:
       context: .
       dockerfile: web/Dockerfile
     volumes:
-    - ./web/:/app/web
+    - ./python/src/static/data:/app/web/data
+    - ./web/dist:/app/web/dist
+    - ./web/src:/app/web/src
     ports:
     - "1234:1234"
     - "8080:8080"

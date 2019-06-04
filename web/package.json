@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "clear_dist": "rm -rf dist/*",
-    "import_data": "mkdir -p dist && cp -R ../python/src/static/data dist/data/",
+    "import_data": "mkdir -p dist && cp -R data dist/data/",
     "build": "yarn clear_dist && yarn import_data && parcel build src/index.html --public-url ./",
     "develop": "yarn clear_dist && yarn import_data && parcel --hmr-port 8080 src/index.html",
     "serve": "pm2 serve dist/ 80 --no-daemon"
