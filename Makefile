@@ -1,22 +1,20 @@
-install: analysis.install web.install
-
-analysis.install:
-	docker build --rm -f Dockerfile.analysis -t module-evaluation/analysis .
-
-analysis.develop:
-	docker run -it --rm -p 8888:8888 -v $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))):/home/jovyan module-evaluation/analysis start.sh jupyter lab
-
-analysis.run:
-	docker run -it --rm -v $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))):/home/jovyan module-evaluation/analysis ./analysis/main.py
+jupyter:
+	docker-compose run -p 8888:8888 app start.sh jupyter lab
 
 web.install:
-	docker build --rm -f Dockerfile.web -t module-evaluation/web . && docker run -it --rm -v $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))):/app module-evaluation/web yarn
+	# docker build --rm -f Dockerfile.web -t module-evaluation/web . && docker run -it --rm -v $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))):/app module-evaluation/web yarn
+	docker-compose build web
 
 web.develop:
-	docker run -it --rm -p 1234:1234 -p 8080:8080 -v $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))):/app module-evaluation/web yarn develop
+	# docker run -it --rm -p 1234:1234 -p 8080:8080 -v $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))):/app module-evaluation/web yarn develop
+	docker compose up
 
 web.build:
-	docker run -it --rm -v $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))):/app module-evaluation/web yarn build
+	# docker run -it --rm -v $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))):/app module-evaluation/web yarn build && make web.copy
+	docker compose run web yarn build && make web.copy
 
-web.serve:
-	docker run -it --rm -p 80:80 -v $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))):/app module-evaluation/web yarn serve
+web.copy:
+	rm -rf python/src/static/* && cp -R web/dist/* python/src/static
+
+run:
+	docker-compose up nginx

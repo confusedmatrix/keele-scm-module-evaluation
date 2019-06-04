@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  nginx:
+    image: nginx
+    ports:
+    - "80:80"
+    volumes:
+    - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+    - app
+  app:
+    build: ./python
+    ports:
+    - "8080:8080"
+    - "8888:8888"
+    volumes:
+    - ./python:/home/jovyan
+    working_dir: /home/jovyan/src
+    command: gunicorn -w 4 -b 0.0.0.0:8080 wsgi:app
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    volumes:
+    - ./web/:/app/web
+    ports:
+    - "1234:1234"
+    - "8080:8080"
+    command: yarn develop

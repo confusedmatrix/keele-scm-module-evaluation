@@ -1,5 +1,3 @@
-#!/usr/bin/env python 
-
 import pandas as pd
 import numpy as np
 import os
@@ -9,7 +7,8 @@ from hashlib import sha512
 from vega import VegaLite
 from wordcloud import WordCloud
 
-DATA_DIR = "data"
+DATA_DIR = "../data"
+OUT_DIR = "static/data"
 
 def mkdir(directory):
     """
@@ -242,7 +241,7 @@ def build_student_feedback_histogram(height, width, data, questions, question):
     }, data)
 
 def build_word_cloud(text):
-    return WordCloud(background_color="black", colormap="GnBu", height=height, width=width, font_path="analysis/fonts/caveat.ttf").generate(text)
+    return WordCloud(background_color="black", colormap="GnBu", height=height, width=width, font_path="../fonts/caveat.ttf").generate(text)
 
 def get_staff_feedback(module):
     fb = pd.read_csv("{0}/raw/staff-feedback.csv".format(DATA_DIR))
@@ -268,81 +267,83 @@ mc_options = [
 
 # -------------------------------------------- #
 
-print("Running analysis...")
 
-# Generate output directories
-mkdir("{0}/generated/".format(DATA_DIR))
-mkdir("{0}/generated/images".format(DATA_DIR))
+def generate_data():
+    print("Running analysis...")
 
-# Get grades & average grades for all modules
-# all_grades = [get_grades(module)["final_grade"] for module in modules]
-# average_grades = pd.DataFrame(pd.concat(all_grades, axis=1).mean(axis=1), columns=["average_grade"])
+    # Generate output directories
+    mkdir("{0}/".format(OUT_DIR))
+    mkdir("{0}/images".format(OUT_DIR))
 
-full_output = {}
-for module in modules:
+    # Get grades & average grades for all modules
+    # all_grades = [get_grades(module)["final_grade"] for module in modules]
+    # average_grades = pd.DataFrame(pd.concat(all_grades, axis=1).mean(axis=1), columns=["average_grade"])
 
-    mkdir("{0}/generated/images/{1}".format(DATA_DIR, module))
-    
-    output = {}
-    output["module_code"] = module
-    
-    # try:
-    #     module_grades = get_grades(module)
-    #     output["num_students"] = module_grades.shape[0]
+    full_output = {}
+    for module in modules:
+
+        mkdir("{0}/images/{1}".format(OUT_DIR, module))
         
-    #     year, semester = get_year_and_semester(module)
-    #     output["year"] = year
-    #     output["semester"] = re.sub(r"SEM", "", semester)
-
-    #     chart = build_grade_histogram(height, width, module_grades)
-    #     output["grade_histogram"] = chart.spec
+        output = {}
+        output["module_code"] = module
         
-    #     output["grade_statistics"] = get_grade_stats(module_grades)
+        # try:
+        #     module_grades = get_grades(module)
+        #     output["num_students"] = module_grades.shape[0]
+            
+        #     year, semester = get_year_and_semester(module)
+        #     output["year"] = year
+        #     output["semester"] = re.sub(r"SEM", "", semester)
+
+        #     chart = build_grade_histogram(height, width, module_grades)
+        #     output["grade_histogram"] = chart.spec
+            
+        #     output["grade_statistics"] = get_grade_stats(module_grades)
+            
+        #     compare_grades = module_grades.merge(average_grades, left_index=True, right_index=True, how="left")
+
+        #     chart = build_grade_comparison_plot(height, width, compare_grades)
+        #     output["grade_comparison_plot"] = chart.spec
+        # except(FileNotFoundError):
+        #     print("No grade data found for {0}".format(module))
         
-    #     compare_grades = module_grades.merge(average_grades, left_index=True, right_index=True, how="left")
+        try:
+            smcq, smca = get_student_multi_choice_feedback(module, mc_options)
+            
+            output["student_feedback"] = {}
+            output["student_feedback"]["questions"] = []
+            output["student_feedback"]["histograms"] = []
+            for i in range(1, len(smcq)+1):
+                chart = build_student_feedback_histogram(height, width, smca, smcq, i)
+                output["student_feedback"]["questions"].append(smcq[i-1])
+                output["student_feedback"]["histograms"].append(chart.spec)
 
-    #     chart = build_grade_comparison_plot(height, width, compare_grades)
-    #     output["grade_comparison_plot"] = chart.spec
-    # except(FileNotFoundError):
-    #     print("No grade data found for {0}".format(module))
-    
-    try:
-        smcq, smca = get_student_multi_choice_feedback(module, mc_options)
-        
-        output["student_feedback"] = {}
-        output["student_feedback"]["questions"] = []
-        output["student_feedback"]["histograms"] = []
-        for i in range(1, len(smcq)+1):
-            chart = build_student_feedback_histogram(height, width, smca, smcq, i)
-            output["student_feedback"]["questions"].append(smcq[i-1])
-            output["student_feedback"]["histograms"].append(chart.spec)
+            output['student_feedback']["text"] = get_textual_student_feedback(module)
 
-        output['student_feedback']["text"] = get_textual_student_feedback(module)
+            output['student_feedback']['descriptive'] = []
+            dfbq, dfba = get_descriptive_student_feedback(module)
+            for i in range(len(dfbq)):
+                wordcloud = build_word_cloud(dfba[i].str.cat(sep=" "))
+                wordcloud.to_file("{0}/images/{1}/{2}.png".format(OUT_DIR, module, dfbq[i][0]))
 
-        output['student_feedback']['descriptive'] = []
-        dfbq, dfba = get_descriptive_student_feedback(module)
-        for i in range(len(dfbq)):
-            wordcloud = build_word_cloud(dfba[i].str.cat(sep=" "))
-            wordcloud.to_file("{0}/generated/images/{1}/{2}.png".format(DATA_DIR, module, dfbq[i][0]))
+                output["student_feedback"]["questions"].append(dfbq[i])
+                output['student_feedback']['descriptive'].append({
+                    "image": "/{0}/images/{1}/{2}.png".format(OUT_DIR, module, dfbq[i][0]),
+                    "text": dfba[i].tolist()
+                })
+            
+        except(FileNotFoundError):
+            print("No student feedback data found for {0}".format(module))
 
-            output["student_feedback"]["questions"].append(dfbq[i])
-            output['student_feedback']['descriptive'].append({
-                "image": "{0}/images/{1}/{2}.png".format(DATA_DIR, module, dfbq[i][0]),
-                "text": dfba[i].tolist()
-            })
-        
-    except(FileNotFoundError):
-        print("No student feedback data found for {0}".format(module))
+        # try:
+        #     staff_feedback = get_staff_feedback(module)
+        #     if staff_feedback == None:
+        #         print("No staff feedback data found for {0}".format(module))
+        #     else:
+        #         output["staff_feedback"] = get_staff_feedback(module)
+        # except(FileNotFoundError):
+        #     print("No staff feedback data found for {0}".format(module))
 
-    # try:
-    #     staff_feedback = get_staff_feedback(module)
-    #     if staff_feedback == None:
-    #         print("No staff feedback data found for {0}".format(module))
-    #     else:
-    #         output["staff_feedback"] = get_staff_feedback(module)
-    # except(FileNotFoundError):
-    #     print("No staff feedback data found for {0}".format(module))
+        full_output[module] = output
 
-    full_output[module] = output
-
-save_file("{0}/generated/modules.json".format(DATA_DIR), json.dumps(full_output))
+    save_file("{0}/modules.json".format(OUT_DIR), json.dumps(full_output))

@@ -1,10 +1,6 @@
-.cache
-.config
-.ipynb_checkpoints
-.ipython
-.jupyter
-.local
+.*
 *.log
-dist
-data
-node_modules
+python/data
+python/src/static
+web/dist
+web/node_modules

@@ -4,7 +4,7 @@ import { h, app } from "hyperapp"
 // import fetch from "isomorphic-fetch"
 import vegaEmbed from 'vega-embed'
 
-import modules from '../dist/data/modules.json'
+// import modules from '../dist/data/modules.json'
 import { Model } from "vega-lite/build/src/compile/model";
 import { labelAlign } from "vega-lite/build/src/compile/layout/header";
 
@@ -39,11 +39,13 @@ const state = {
     // modules,
     currentModuleCode: null,
     // currentModuleCode: Object.keys(modules).sort()[0],
-    printing: false
+    printing: false,
+    regenerating: false,
 }
 const actions = {
     init: () => async (state, actions) => {
-        const resp = await fetch('data/modules.json')
+        const cachebust = new Date().getTime()
+        const resp = await fetch(`data/modules.json?${cachebust}`)
         if (resp.status >= 400) throw new Error("Bad response from server")
 
         const modules = await resp.json()
@@ -51,14 +53,16 @@ const actions = {
     },
     regenerateData: () => async (state, actions) => {
         actions.clearModules()
-        const resp = await fetch('api/regenerate-data')
+        actions.regenerating()
+        const resp = await fetch('/api/regenerate-data')
         if (resp.status >= 400) throw new Error("Bad response from server")
 
         const payload = await resp.json()
         actions.init()
     },
+    regenerating: () => state => ({ regenerating: true }),
     clearModules: () => state => ({ modules: {}, currentModuleCode: null }),
-    loadModules: modules => state => ({ modules, currentModuleCode: Object.keys(modules)[0] }),
+    loadModules: modules => state => ({ modules, currentModuleCode: Object.keys(modules)[0], regenerating: false }),
     changeModule: module => state => ({ currentModuleCode: module }),
     printAll: () => (state, actions) => {
         setTimeout(() => window.print(), 1000)
@@ -68,20 +72,19 @@ const actions = {
 }
 
 const AppView = (state, actions) => {
-    if (Object.keys(state.modules).length < 1) {
-        return <Loading />
-
-    } else if (state.printing) {
-        return <PrintView modules={modules} />
+    if (state.printing) {
+        return <PrintView modules={state.modules} />
     }
 
     return (
         <div>
             <Header
                 modules={state.modules}
+                regenerating={state.regenerating}
                 changeModule={actions.changeModule}
                 printAll={actions.printAll}
                 regenerateData={actions.regenerateData} />
+            {Object.keys(state.modules).length < 1 ? <Loading /> : null}
             {state.currentModuleCode ? <Module module={state.modules[state.currentModuleCode]} /> : null}
         </div>
     )
@@ -97,15 +100,15 @@ const Loading = () => (
     <div class="loading loading-lg"></div>
 )
 
-const Header = ({ modules, changeModule, printAll, regenerateData }) => (
+const Header = ({ modules, regenerating, changeModule, printAll, regenerateData }) => (
     <div id="header" class="form-group">
         <label class="form-label form-inline">Select a module</label>
         <select class="form-select form-inline" onchange={e => changeModule(e.target.value)}>
-            {Object.keys(modules).sort().map(module => (
+            {Object.keys(modules).length < 1 ? <option>No modules</option> : Object.keys(modules).sort().map(module => (
                 <option key={module} value={module}>{module}</option>
             ))}
         </select>
-        <button class="btn" onclick={e => regenerateData()}>Regenerate all data</button>
+        <button class="btn" onclick={e => regenerateData()}>{regenerating ? "Regenerating..." : "Regenerate all data"}</button>
         <button class="btn btn-primary print-btn form-inline" onclick={e => printAll()}>Print all modules</button>
     </div>
 )
