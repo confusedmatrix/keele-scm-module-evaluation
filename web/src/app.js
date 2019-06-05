@@ -62,7 +62,7 @@ const actions = {
     },
     regenerating: () => state => ({ regenerating: true }),
     clearModules: () => state => ({ modules: {}, currentModuleCode: null }),
-    loadModules: modules => state => ({ modules, currentModuleCode: Object.keys(modules)[0], regenerating: false }),
+    loadModules: modules => state => ({ modules, currentModuleCode: Object.keys(modules).sort()[0], regenerating: false }),
     changeModule: module => state => ({ currentModuleCode: module }),
     printAll: () => (state, actions) => {
         setTimeout(() => window.print(), 1000)
@@ -92,7 +92,7 @@ const AppView = (state, actions) => {
 
 const PrintView = ({ modules }) => (
     <div id="print-modules">
-        {Object.values(modules).map(module => <Module module={module} />)}
+        {Object.keys(modules).sort().map(k => <Module module={modules[k]} />)}
     </div>
 )
 
@@ -141,7 +141,7 @@ const StudentFeedback = ({ feedback }) => (
             <div class="question" data-qnumber={k + 1}>
                 <h4>{formatQuestion(feedback.questions[k])}</h4>
                 <div oncreate={el => embedChart(el, `student_feedback_histogram_${k + 1}`, feedback.histograms[k])}></div>
-                {feedback.text[k].length < 1 ? null : (
+                {!feedback.text[k] || feedback.text[k].length < 1 ? null : (
                     <div>
                         <h4>Responses</h4>
                         {feedback.text[k].map(response => (
@@ -157,7 +157,7 @@ const StudentFeedback = ({ feedback }) => (
             return (
                 <div class="question" data-qnumber={key + 1}>
                     <h4>{formatQuestion(feedback.questions[key])}</h4>
-                    <img src={feedback.descriptive[k].image} />
+                    {feedback.descriptive[k].image ? <img src={feedback.descriptive[k].image} /> : null}
                     {feedback.descriptive[k].text.length < 1 ? null : (
                         <div>
                             <h4>Full responses</h4>

@@ -4,7 +4,11 @@ jupyter:
 
 # Runs the flask application (proxied via NGINX) on localhost:80
 run:
-	docker-compose up nginx
+	docker-compose up app nginx
+
+# Destroys running and non-running containers in the project
+kill:
+	docker-compose down
 
 # Installs the node_modules for the web container
 web.install:
@@ -21,4 +25,7 @@ web.build:
 # Copies the frontend assets to static dir in python container
 web.copy:
 	rm -rf python/src/static/* && cp -R web/dist/* python/src/static
+
+python.data.generate:
+	docker-compose run app python generate_data.py
 

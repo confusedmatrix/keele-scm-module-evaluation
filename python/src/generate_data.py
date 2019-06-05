@@ -240,7 +240,7 @@ def build_student_feedback_histogram(height, width, data, questions, question):
         }
     }, data)
 
-def build_word_cloud(text):
+def build_word_cloud(text, height, width):
     return WordCloud(background_color="black", colormap="GnBu", height=height, width=width, font_path="../fonts/caveat.ttf").generate(text)
 
 def get_staff_feedback(module):
@@ -250,26 +250,19 @@ def get_staff_feedback(module):
         return None
     return mfb.drop(["Timestamp", "Email address", "Module Code", "Module Name"], axis=1).iloc[0].to_dict()
 
-
-
-# -------------------------------------------- #
-
-modules = get_modules("{0}/raw/modules/".format(DATA_DIR))
-height = 400
-width = 800
-mc_options = [
-    "Strongly Agree",
-    "Agree",
-    "Disagree",
-    "Strongly Disagree",
-    "N/A"
-]
-
-# -------------------------------------------- #
-
-
 def generate_data():
     print("Running analysis...")
+
+    modules = get_modules("{0}/raw/modules/".format(DATA_DIR))
+    height = 400
+    width = 800
+    mc_options = [
+        "Strongly Agree",
+        "Agree",
+        "Disagree",
+        "Strongly Disagree",
+        "N/A"
+    ]
 
     # Generate output directories
     mkdir("{0}/".format(OUT_DIR))
@@ -286,6 +279,7 @@ def generate_data():
         
         output = {}
         output["module_code"] = module
+        print(f"Generating data for {module}")
         
         # try:
         #     module_grades = get_grades(module)
@@ -323,12 +317,16 @@ def generate_data():
             output['student_feedback']['descriptive'] = []
             dfbq, dfba = get_descriptive_student_feedback(module)
             for i in range(len(dfbq)):
-                wordcloud = build_word_cloud(dfba[i].str.cat(sep=" "))
-                wordcloud.to_file("{0}/images/{1}/{2}.png".format(OUT_DIR, module, dfbq[i][0]))
+                no_wordcloud = False
+                try:
+                    wordcloud = build_word_cloud(dfba[i].str.cat(sep=" "), height, width)
+                    wordcloud.to_file("{0}/images/{1}/{2}.png".format(OUT_DIR, module, dfbq[i][0]))
+                except(ValueError):
+                    no_wordcloud = True
 
                 output["student_feedback"]["questions"].append(dfbq[i])
                 output['student_feedback']['descriptive'].append({
-                    "image": "/{0}/images/{1}/{2}.png".format(OUT_DIR, module, dfbq[i][0]),
+                    "image": None if no_wordcloud else "/{0}/images/{1}/{2}.png".format(OUT_DIR, module, dfbq[i][0]),
                     "text": dfba[i].tolist()
                 })
             
@@ -347,3 +345,6 @@ def generate_data():
         full_output[module] = output
 
     save_file("{0}/modules.json".format(OUT_DIR), json.dumps(full_output))
+
+if __name__ == "__main__":
+    generate_data()

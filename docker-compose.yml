@@ -17,7 +17,7 @@ services:
     volumes:
     - ./python:/home/jovyan
     working_dir: /home/jovyan/src
-    command: gunicorn -w 4 -b 0.0.0.0:8080 wsgi:app
+    command: gunicorn -w 4 --timeout 300  -b 0.0.0.0:8080 wsgi:app
   web:
     build:
       context: .
