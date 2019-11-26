@@ -273,13 +273,13 @@ def generate_data():
     # average_grades = pd.DataFrame(pd.concat(all_grades, axis=1).mean(axis=1), columns=["average_grade"])
 
     full_output = {}
-    for module in modules:
+    for i, module in enumerate(modules):
 
         mkdir("{0}/images/{1}".format(OUT_DIR, module))
         
         output = {}
         output["module_code"] = module
-        print(f"Generating data for {module}")
+        print(f"{i+1}/{len(modules)} Generating data for {module}")
         
         # try:
         #     module_grades = get_grades(module)
@@ -326,7 +326,7 @@ def generate_data():
 
                 output["student_feedback"]["questions"].append(dfbq[i])
                 output['student_feedback']['descriptive'].append({
-                    "image": None if no_wordcloud else "/{0}/images/{1}/{2}.png".format(OUT_DIR, module, dfbq[i][0]),
+                    "image": None if no_wordcloud else "data/images/{0}/{1}.png".format(module, dfbq[i][0]),
                     "text": dfba[i].tolist()
                 })
             

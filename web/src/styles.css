@@ -5,12 +5,20 @@
 #header {
     position: fixed;
     width: 100%;
-    background-color: #f8f9fa;
+    background-color: #b2c2d6;
     padding: 1em;
     top: 0;
     left: 0;
     text-align: center;
     z-index: 9;
+}
+#header h1 {
+    text-align: left;
+    font-size: 1.5em;
+    color: #2a3b50;
+}
+#header .form-group {
+    text-align: right;
 }
 #header select {
     width: 10em;
@@ -21,7 +29,7 @@
 }
 
 .module {
-    margin: 5em 0; 
+    margin: 6em 0; 
 }
 .module h2 {
     margin-left: 2.6em;
@@ -111,6 +119,25 @@ blockquote {
 
 .staff-feedback p {
     margin: 1em 4.5em; 
+}
+
+/* Mobile styling */
+@media screen and (max-width: 1024px) {
+    #header .form-group {
+        text-align: left;
+    }
+    .module {
+        margin-top: 8em;
+    }
+    .module h2, h3 {
+        margin-left: 0.5em;
+    }
+    .question::after {
+        left: 0em;
+    }
+    blockquote {
+        margin-left: 3.5em;
+    }
 }
 
 

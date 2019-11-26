@@ -1,4 +1,4 @@
-import "babel-polyfill";
+import "babel-polyfill"
 
 import { h, app } from "hyperapp"
 // import fetch from "isomorphic-fetch"
@@ -35,6 +35,7 @@ const transformStats = stats => ({
 })
 
 const state = {
+    subject: "",
     modules: {},
     // modules,
     currentModuleCode: null,
@@ -51,6 +52,7 @@ const actions = {
         const modules = await resp.json()
         actions.loadModules(modules)
     },
+    // TODO regenerate data currently doesn't account for subject
     regenerateData: () => async (state, actions) => {
         actions.clearModules()
         actions.regenerating()
@@ -62,12 +64,25 @@ const actions = {
     },
     regenerating: () => state => ({ regenerating: true }),
     clearModules: () => state => ({ modules: {}, currentModuleCode: null }),
-    loadModules: modules => state => ({ modules, currentModuleCode: Object.keys(modules).sort()[0], regenerating: false }),
+    loadModules: modules => state => {
+        const subject_regex = state.subject === "CSC" ? /CSC|CSY/ : /MAT/
+        const module_keys = state.subject === "" ? Object.keys(modules) : Object.keys(modules).filter(module => module.search(subject_regex) !== -1)
+        const filtered_modules = module_keys.reduce((a, m) => {
+            a[m] = modules[m]
+            return a
+        }, {})
+        return ({
+            modules: filtered_modules,
+            currentModuleCode: Object.keys(filtered_modules).sort()[0],
+            regenerating: false
+        })
+    },
     changeModule: module => state => ({ currentModuleCode: module }),
     printAll: () => (state, actions) => {
         setTimeout(() => window.print(), 1000)
         return ({ printing: true })
     },
+    setSubject: subject => state => ({ subject }),
     logState: () => state => console.log(state),
 }
 
@@ -79,6 +94,7 @@ const AppView = (state, actions) => {
     return (
         <div>
             <Header
+                subject={state.subject}
                 modules={state.modules}
                 regenerating={state.regenerating}
                 changeModule={actions.changeModule}
@@ -100,16 +116,25 @@ const Loading = () => (
     <div class="loading loading-lg"></div>
 )
 
-const Header = ({ modules, regenerating, changeModule, printAll, regenerateData }) => (
-    <div id="header" class="form-group">
-        <label class="form-label form-inline">Select a module</label>
-        <select class="form-select form-inline" onchange={e => changeModule(e.target.value)}>
-            {Object.keys(modules).length < 1 ? <option>No modules</option> : Object.keys(modules).sort().map(module => (
-                <option key={module} value={module}>{module}</option>
-            ))}
-        </select>
-        <button class="btn" onclick={e => regenerateData()}>{regenerating ? "Regenerating..." : "Regenerate all data"}</button>
-        <button class="btn btn-primary print-btn form-inline" onclick={e => printAll()}>Print all modules</button>
+const Header = ({ subject, modules, regenerating, changeModule, printAll, regenerateData }) => (
+    <div id="header">
+        <div class="container grid-lg">
+            <div class="columns">
+                <div class="column col-lg-8 col-md-12">
+                    <h1>{"Module evaluation" + (subject === "CSC" ? " (Comp Sci)" : (subject === "MAT" ? " (Maths)" : ""))}</h1>
+                </div>
+                <div class="column col-lg-4 col-md-12 form-group">
+                    <label class="form-label form-inline">Select a module</label>
+                    <select class="form-select form-inline" onchange={e => changeModule(e.target.value)}>
+                        {Object.keys(modules).length < 1 ? <option>No modules</option> : Object.keys(modules).sort().map(module => (
+                            <option key={module} value={module}>{module}</option>
+                        ))}
+                    </select>
+                    {/* <button class="btn" onclick={e => regenerateData()}>{regenerating ? "Regenerating..." : "Regenerate all data"}</button>
+                    <button class="btn btn-primary print-btn form-inline" onclick={e => printAll()}>Print all modules</button> */}
+                </div>
+            </div>
+        </div>
     </div>
 )
 
@@ -186,4 +211,9 @@ const StaffFeeback = ({ feedback }) => (
     </div>
 )
 
-app(state, actions, AppView, document.getElementById("root")).init()
+const hash = new URL(document.location).hash
+const subject = hash.replace("#", "")
+
+const App = app(state, actions, AppView, document.getElementById("root"))
+App.setSubject(subject)
+App.init()
