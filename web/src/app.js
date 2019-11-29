@@ -37,9 +37,9 @@ const transformStats = stats => ({
 const state = {
     subject: "",
     modules: {},
-    // modules,
     currentModuleCode: null,
-    // currentModuleCode: Object.keys(modules).sort()[0],
+    currentLAChart: null,
+    currentLAVsGradesChart: null,
     printing: false,
     regenerating: false,
 }
@@ -77,7 +77,9 @@ const actions = {
             regenerating: false
         })
     },
-    changeModule: module => state => ({ currentModuleCode: module }),
+    changeModule: module => state => ({ currentModuleCode: module, currentLAChart: null, currentLAVsGradesChart: null }),
+    changeLAChart: field => state => ({ currentLAChart: field }),
+    changeLAVsGradesChart: field => state => ({ currentLAVsGradesChart: field }),
     printAll: () => (state, actions) => {
         setTimeout(() => window.print(), 1000)
         return ({ printing: true })
@@ -101,7 +103,11 @@ const AppView = (state, actions) => {
                 printAll={actions.printAll}
                 regenerateData={actions.regenerateData} />
             {Object.keys(state.modules).length < 1 ? <Loading /> : null}
-            {state.currentModuleCode ? <Module module={state.modules[state.currentModuleCode]} /> : null}
+            {state.currentModuleCode ? <Module module={state.modules[state.currentModuleCode]}
+                                               currentLAChart={state.currentLAChart}
+                                               currentLAVsGradesChart={state.currentLAVsGradesChart}
+                                               changeLAChart={actions.changeLAChart}
+                                               changeLAVsGradesChart={actions.changeLAVsGradesChart} /> : null}
         </div>
     )
 }
@@ -120,10 +126,10 @@ const Header = ({ subject, modules, regenerating, changeModule, printAll, regene
     <div id="header">
         <div class="container grid-lg">
             <div class="columns">
-                <div class="column col-lg-8 col-md-12">
+                <div class="column col-8 col-md-12">
                     <h1>{"Module evaluation" + (subject === "CSC" ? " (Comp Sci)" : (subject === "MAT" ? " (Maths)" : ""))}</h1>
                 </div>
-                <div class="column col-lg-4 col-md-12 form-group">
+                <div class="column col-4 col-md-12 form-group">
                     <label class="form-label form-inline">Select a module</label>
                     <select class="form-select form-inline" onchange={e => changeModule(e.target.value)}>
                         {Object.keys(modules).length < 1 ? <option>No modules</option> : Object.keys(modules).sort().map(module => (
@@ -138,24 +144,79 @@ const Header = ({ subject, modules, regenerating, changeModule, printAll, regene
     </div>
 )
 
-const Module = ({ module }) => (
+const Module = ({ module, currentLAChart, currentLAVsGradesChart, changeLAChart, changeLAVsGradesChart }) => (
     <div key={module.module_code} class="module">
-        <h2>{module.module_code}</h2>
-        {/* <h2>{module.module_code} ({module.year}, semester {module.semester})<br /><span class="h6 label">{module.num_students} students</span></h2> */}
+        {/* <h2>{module.module_code}</h2> */}
+        <h2>{module.module_code} ({module.year}, semester {module.semester})<br /><span class="h6 label">{module.num_students} students</span></h2>
 
-        {/* <div oncreate={el => embedChart(el, "grade_histogram", module.grade_histogram)}></div>
+        <h3>Individual assessment performance</h3>
+        {module.grade_histograms.assessments.map((hist, k) => (
+            <div oncreate={el => embedChart(el, `assessment_histogram_${k + 1}`, hist)}></div>
+        ))}
+
+        <h3>Final attainment</h3>
+        <div oncreate={el => embedChart(el, "grade_histogram", module.grade_histograms.final)}></div>
         <ul class="module-stats">
-            { Object.entries(transformStats(module.grade_statistics)).map(([ key, value ]) => (
+            {Object.entries(transformStats(module.grade_statistics)).map(([key, value]) => (
                 <li><span class="title">{key}</span><span class="value">{value}</span></li>
-            )) }
+            ))}
         </ul>
-        <div oncreate={el => embedChart(el, "grade_comparison_plot", module.grade_comparison_plot)}></div> */}
+        <div oncreate={el => embedChart(el, "grade_comparison_plot", module.grade_comparison_plot)}></div>
+
+        {module.hasOwnProperty("la") ?
+            <LearningAnalytics la={module.la} 
+                               currentLAChart={currentLAChart}
+                               currentLAVsGradesChart={currentLAVsGradesChart}
+                               changeLAChart={changeLAChart} 
+                               changeLAVsGradesChart={changeLAVsGradesChart} /> :
+            <p class="toast toast-error">No learning analytics data available</p>}
+
         {module.hasOwnProperty("student_feedback") ?
             <StudentFeedback feedback={module.student_feedback} /> :
             <p class="toast toast-error">No student feedback data available</p>}
         {/* { module.hasOwnProperty("staff_feedback") ? 
             <StaffFeeback feedback={module.staff_feedback} /> :
             <p class="toast toast-error">No staff feedback data available</p> } */}
+    </div>
+)
+
+const LearningAnalytics = ({ la, currentLAChart, currentLAVsGradesChart, changeLAChart, changeLAVsGradesChart }) => (
+    <div id="learning-analytics">
+        <h3>Learning analytics <span class="h6 label">based on {la.num_students} students</span></h3>
+
+        <div class="container">
+            <div class="columns">
+                <div class="column col-8 col-md-12">
+                    <h4>Per-week learning analytics stats<br /><small>Averaged over all students</small></h4>
+                </div>
+                <div class="column col-4 col-md-12 form-group">
+                    <select class="form-select form-inline" onchange={e => changeLAChart(e.target.value)}>
+                        {Object.keys(la.charts).map(field => (
+                            <option key={field} value={field}>{field}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div oncreate={el => embedChart(el, `la_chart`, currentLAChart == null ? la.charts[Object.keys(la.charts)[0]] : la.charts[currentLAChart])}
+             onupdate={el => embedChart(el, `la_chart`, currentLAChart == null ? la.charts[Object.keys(la.charts)[0]] : la.charts[currentLAChart])}></div>
+        
+        <div class="container">
+            <div class="columns">
+                <div class="column col-8 col-md-12">
+                    <h4>Student learning analytics vs attainment<br /><small>Averaged over all weeks</small></h4>
+                </div>
+                <div class="column col-4 col-md-12 form-group">
+                    <select class="form-select form-inline" onchange={e => changeLAVsGradesChart(e.target.value)}>
+                        {Object.keys(la.vs_charts).map(field => (
+                            <option key={field} value={field}>{field}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div oncreate={el => embedChart(el, `la_vs_chart`, currentLAVsGradesChart == null ? la.vs_charts[Object.keys(la.charts)[0]] : la.vs_charts[currentLAVsGradesChart])}
+             onupdate={el => embedChart(el, `la_vs_chart`, currentLAVsGradesChart == null ? la.vs_charts[Object.keys(la.charts)[0]] : la.vs_charts[currentLAVsGradesChart])}></div>
     </div>
 )
 
@@ -177,7 +238,8 @@ const StudentFeedback = ({ feedback }) => (
             </div>
         ))}
 
-        {feedback.descriptive.map((desc, k) => {
+        {/* Word clouds */}
+        {/* {feedback.descriptive.map((desc, k) => {
             const key = feedback.histograms.length + k
             return (
                 <div class="question" data-qnumber={key + 1}>
@@ -193,7 +255,7 @@ const StudentFeedback = ({ feedback }) => (
                     )}
                 </div>
             )
-        })}
+        })} */}
     </div>
 )
 

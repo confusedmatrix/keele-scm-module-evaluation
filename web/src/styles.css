@@ -31,12 +31,12 @@
 .module {
     margin: 6em 0; 
 }
-.module h2 {
-    margin-left: 2.6em;
-}
 
 h2, h3, h4 {
-    margin: 1em 1.5em 1em 3em; 
+    margin: 10px 15px 10px 30px; 
+}
+h4 {
+    margin-left: 20px;
 }
 
 blockquote {
@@ -77,12 +77,21 @@ blockquote {
     font-size: 1.3em;
 }
 
+#learning-analytics {
+    padding: 20px;
+    margin: 40px 0;
+    border: 3px solid #b2c2d6;
+}
+#learning-analytics .form-group select {
+    margin: 10px 20px 0 0;
+}
+
 .question {
     padding: 1em 0;
     position: relative;
     overflow: visible;
     margin: 2em 0;
-    border: 3px solid #f8f8f8;
+    border: 3px solid #eeeeee;
 }
 .question:nth-child(even) {
     background-color: #f8f8f8;
@@ -104,6 +113,9 @@ blockquote {
     font-weight: bold;
 }
 
+.question h4 {
+    margin-left: 80px;
+}
 .question img {
     margin: 1em auto;
     display: block;
@@ -130,7 +142,10 @@ blockquote {
         margin-top: 8em;
     }
     .module h2, h3 {
-        margin-left: 0.5em;
+        margin-left: 15px;
+    }
+    .module h4 {
+        margin-left: 5px;
     }
     .question::after {
         left: 0em;
