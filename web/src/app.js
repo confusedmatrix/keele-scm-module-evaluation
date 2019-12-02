@@ -52,7 +52,7 @@ const actions = {
         const modules = await resp.json()
         actions.loadModules(modules)
     },
-    // TODO regenerate data currently doesn't account for subject
+    // TODO regenerate data currently doesn't account for module
     regenerateData: () => async (state, actions) => {
         actions.clearModules()
         actions.regenerating()
@@ -104,10 +104,10 @@ const AppView = (state, actions) => {
                 regenerateData={actions.regenerateData} />
             {Object.keys(state.modules).length < 1 ? <Loading /> : null}
             {state.currentModuleCode ? <Module module={state.modules[state.currentModuleCode]}
-                                               currentLAChart={state.currentLAChart}
-                                               currentLAVsGradesChart={state.currentLAVsGradesChart}
-                                               changeLAChart={actions.changeLAChart}
-                                               changeLAVsGradesChart={actions.changeLAVsGradesChart} /> : null}
+                currentLAChart={state.currentLAChart}
+                currentLAVsGradesChart={state.currentLAVsGradesChart}
+                changeLAChart={actions.changeLAChart}
+                changeLAVsGradesChart={actions.changeLAVsGradesChart} /> : null}
         </div>
     )
 }
@@ -164,11 +164,11 @@ const Module = ({ module, currentLAChart, currentLAVsGradesChart, changeLAChart,
         <div oncreate={el => embedChart(el, "grade_comparison_plot", module.grade_comparison_plot)}></div>
 
         {module.hasOwnProperty("la") ?
-            <LearningAnalytics la={module.la} 
-                               currentLAChart={currentLAChart}
-                               currentLAVsGradesChart={currentLAVsGradesChart}
-                               changeLAChart={changeLAChart} 
-                               changeLAVsGradesChart={changeLAVsGradesChart} /> :
+            <LearningAnalytics la={module.la}
+                currentLAChart={currentLAChart}
+                currentLAVsGradesChart={currentLAVsGradesChart}
+                changeLAChart={changeLAChart}
+                changeLAVsGradesChart={changeLAVsGradesChart} /> :
             <p class="toast toast-error">No learning analytics data available</p>}
 
         {module.hasOwnProperty("student_feedback") ?
@@ -199,8 +199,8 @@ const LearningAnalytics = ({ la, currentLAChart, currentLAVsGradesChart, changeL
             </div>
         </div>
         <div oncreate={el => embedChart(el, `la_chart`, currentLAChart == null ? la.charts[Object.keys(la.charts)[0]] : la.charts[currentLAChart])}
-             onupdate={el => embedChart(el, `la_chart`, currentLAChart == null ? la.charts[Object.keys(la.charts)[0]] : la.charts[currentLAChart])}></div>
-        
+            onupdate={el => embedChart(el, `la_chart`, currentLAChart == null ? la.charts[Object.keys(la.charts)[0]] : la.charts[currentLAChart])}></div>
+
         <div class="container">
             <div class="columns">
                 <div class="column col-8 col-md-12">
@@ -216,7 +216,7 @@ const LearningAnalytics = ({ la, currentLAChart, currentLAVsGradesChart, changeL
             </div>
         </div>
         <div oncreate={el => embedChart(el, `la_vs_chart`, currentLAVsGradesChart == null ? la.vs_charts[Object.keys(la.charts)[0]] : la.vs_charts[currentLAVsGradesChart])}
-             onupdate={el => embedChart(el, `la_vs_chart`, currentLAVsGradesChart == null ? la.vs_charts[Object.keys(la.charts)[0]] : la.vs_charts[currentLAVsGradesChart])}></div>
+            onupdate={el => embedChart(el, `la_vs_chart`, currentLAVsGradesChart == null ? la.vs_charts[Object.keys(la.charts)[0]] : la.vs_charts[currentLAVsGradesChart])}></div>
     </div>
 )
 
